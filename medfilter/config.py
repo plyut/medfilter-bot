@@ -20,6 +20,9 @@ class Config:
     max_parallel_checks: int
     cache_days: int
     data_dir: Path
+    # Этап 2: апелляции
+    retention_days: int = 180    # сколько хранятся доводы апелляций и подписки на обновления
+    appeals_per_day: int = 5     # лимит апелляций от одного пользователя в сутки
 
     @property
     def speech_enabled(self) -> bool:
@@ -44,4 +47,6 @@ def load() -> Config:
         max_parallel_checks=int(os.getenv("MAX_PARALLEL_CHECKS", "1")),
         cache_days=int(os.getenv("CACHE_DAYS", "30")),
         data_dir=data_dir,
+        retention_days=int(os.getenv("RETENTION_DAYS", "180")),
+        appeals_per_day=int(os.getenv("APPEALS_PER_DAY", "5")),
     )

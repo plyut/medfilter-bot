@@ -46,6 +46,15 @@ def e(x) -> str:
     return escape(str(x or ""))
 
 
+def _marks(c: dict) -> str:
+    """Пометки этапа 2: утверждение оспаривается или вердикт пересмотрен по апелляции."""
+    if c.get("disputed"):
+        return " · ⚖️ <i>оспаривается</i>"
+    if c.get("revised"):
+        return f" · <i>пересмотрено (А-{int(c['revised']):05d})</i>" if str(c["revised"]).isdigit() else " · <i>пересмотрено</i>"
+    return ""
+
+
 def short(r: dict, cached: bool = False) -> str:
     o = r.get("overall") or {}
     icon, label = _v(o.get("verdict"))
@@ -61,13 +70,15 @@ def short(r: dict, cached: bool = False) -> str:
         lines.append("<b>Утверждения:</b>")
         for i, c in enumerate(claims, 1):
             ci, cl = _v(c.get("verdict"))
-            lines.append(f"{i}. {e(c.get('claim'))} — {ci} {cl.lower()}")
+            lines.append(f"{i}. {e(c.get('claim'))} — {ci} {cl.lower()}" + _marks(c))
         lines.append("")
     signs = _list(r.get("manipulation"))
     if signs:
         lines.append("⚠️ <b>Признаки манипуляции:</b> " + "; ".join(e(s.get("sign")) for s in signs if isinstance(s, dict)))
     if o.get("explanation"):
         lines += ["", f"<i>{e(o['explanation'])}</i>"]
+    if claims:
+        lines += ["", "<i>Есть возражения к вердикту? Нажми «⚖️ Оспорить».</i>"]
     if cached:
         lines += ["", "<i>Этот материал уже проверяли недавно, показываю сохранённый результат.</i>"]
     return _cut("\n".join(lines).strip())
@@ -78,7 +89,7 @@ def details(r: dict) -> str:
     for i, c in enumerate(_list(r.get("claims")), 1):
         ci, cl = _v(c.get("verdict"))
         lines.append(f"<b>{i}. {e(c.get('claim'))}</b>")
-        lines.append(f"{ci} {cl}")
+        lines.append(f"{ci} {cl}" + _marks(c))
         if c.get("quote"):
             lines.append(f"<i>«{e(c['quote'])}»</i>")
         if c.get("hedge"):

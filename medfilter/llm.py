@@ -35,5 +35,11 @@ class LLM:
         resp = await self.client.achat(Chat(messages=messages, temperature=0.2, max_tokens=3000))
         return resp.choices[0].message.content
 
+    async def ask_as(self, system: str, prompt: str, temperature: float = 0.2) -> str:
+        """Запрос с другой ролью: перепроверка апелляции, моделируемый эксперт."""
+        messages = [Messages(role=MessagesRole.SYSTEM, content=system), Messages(role=MessagesRole.USER, content=prompt)]
+        resp = await self.client.achat(Chat(messages=messages, temperature=temperature, max_tokens=2500))
+        return resp.choices[0].message.content
+
     async def close(self):
         await self.client.aclose()
