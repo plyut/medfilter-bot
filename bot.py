@@ -9,6 +9,8 @@ from pathlib import Path
 
 from aiogram import Bot, Dispatcher, F
 from aiogram.client.default import DefaultBotProperties
+from aiogram.client.session.aiohttp import AiohttpSession
+from aiogram.client.telegram import TelegramAPIServer
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 from aiogram.filters import Command, CommandStart
@@ -451,9 +453,24 @@ async def purge_loop():
         await asyncio.sleep(DAY)
 
 
+def telegram_session() -> AiohttpSession | None:
+    """Обход блокировки api.telegram.org: свой адрес Bot API (например, Cloudflare Worker) или прокси."""
+    if not (cfg.telegram_api_url or cfg.telegram_proxy):
+        return None
+    kwargs = {}
+    if cfg.telegram_api_url:
+        kwargs["api"] = TelegramAPIServer.from_base(cfg.telegram_api_url)
+    if cfg.telegram_proxy:
+        kwargs["proxy"] = cfg.telegram_proxy
+    return AiohttpSession(**kwargs)
+
+
 async def main():
-    bot = Bot(cfg.telegram_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    log.info("МедФильтр запущен. Распознавание речи: %s", "включено" if cfg.speech_enabled else "выключено")
+    bot = Bot(cfg.telegram_token, session=telegram_session(),
+              default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    route = [name for name, on in (("свой адрес API", cfg.telegram_api_url), ("прокси", cfg.telegram_proxy)) if on]
+    log.info("МедФильтр запущен. Распознавание речи: %s. Telegram: %s",
+             "включено" if cfg.speech_enabled else "выключено", "через " + " и ".join(route) if route else "напрямую")
     purger = asyncio.create_task(purge_loop())
     try:
         await dp.start_polling(bot)

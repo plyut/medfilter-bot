@@ -23,6 +23,9 @@ class Config:
     # Этап 2: апелляции
     retention_days: int = 180    # сколько хранятся доводы апелляций и подписки на обновления
     appeals_per_day: int = 5     # лимит апелляций от одного пользователя в сутки
+    # Доступ к Telegram, если сервер не может обратиться к api.telegram.org напрямую
+    telegram_api_url: str = ""   # свой адрес Bot API, например https://tg.example.workers.dev
+    telegram_proxy: str = ""     # или прокси: socks5://user:pass@host:port, http://host:port
 
     @property
     def speech_enabled(self) -> bool:
@@ -49,4 +52,6 @@ def load() -> Config:
         data_dir=data_dir,
         retention_days=int(os.getenv("RETENTION_DAYS", "180")),
         appeals_per_day=int(os.getenv("APPEALS_PER_DAY", "5")),
+        telegram_api_url=os.getenv("TELEGRAM_API_URL", "").strip().rstrip("/"),
+        telegram_proxy=os.getenv("TELEGRAM_PROXY", "").strip(),
     )

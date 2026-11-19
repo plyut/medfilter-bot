@@ -159,6 +159,28 @@ python -m unittest discover tests
 python demo.py   # демо-сценарии апелляций без Telegram и нейросети
 ```
 
+### Установка одной командой
+
+На чистом сервере Ubuntu 22.04/24.04 скрипт `deploy/install.sh` ставит git, Python и ffmpeg, скачивает бота
+с GitHub, прогоняет тесты и включает автозапуск. Повторный запуск обновляет бота.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/plyut/medfilter-bot/main/deploy/install.sh -o install.sh && bash install.sh
+```
+
+### Если с сервера недоступен Telegram
+
+Из некоторых облаков, в том числе Yandex Cloud, запросы к `api.telegram.org` не проходят. Тогда запросы бота
+к Telegram можно пустить через Cloudflare Worker (бесплатно):
+
+1. В Cloudflare: Workers & Pages → Create → Hello World → вставить код из `deploy/telegram-worker.js` → Deploy.
+2. Адрес воркера (`https://<имя>.<аккаунт>.workers.dev`) вписать в `.env`: `TELEGRAM_API_URL=...`
+3. `sudo systemctl restart medfilter`
+
+Вместо воркера можно указать прокси: `TELEGRAM_PROXY=socks5://user:pass@host:port`.
+GigaChat и SpeechKit при этом работают напрямую, данные пользователей не уходят за пределы России,
+кроме самих сообщений Telegram, которые и так проходят через серверы Telegram.
+
 ### Обновление бота на сервере (этап 2)
 
 Новых зависимостей нет. В `.env` можно добавить `RETENTION_DAYS` и `APPEALS_PER_DAY` (см. `.env.example`),
